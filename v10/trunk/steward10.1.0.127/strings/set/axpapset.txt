@@ -1,5 +1,0 @@
-# Value
-APT
-SUITE
-UNIT
-FLOOR
