@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<!-- ================================ -->
+<!--      Package Java Handlers       -->
+<!-- ================================ -->
+
+<project name="Handler Packaging" default="deploy_instance_handlers" basedir=".">
+
+	<taskdef name="xmltask" classname="com.oopsconsultancy.xmltask.ant.XmlTask"/>
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+	<taskdef name="for" classname="net.sf.antcontrib.logic.ForTask"/>
+		
+	<property file="package-handlers.properties"/>
+	
+	<property name="hub.handler.compress.jar" value="true"/>
+	
+	<pathconvert property="hub.handler.dir">
+		<path location="${basedir}/../bin"/>
+	</pathconvert>
+	<pathconvert property="hub.handler.lib.dir">
+		<path location="${basedir}/../lib"/>
+	</pathconvert>
+	
+	<!-- include/exclude masks for handler classes (override via package-handlers.properties) -->
+	<property name="hub.handler.include.mask" value="**/*"/>
+	<property name="hub.handler.exclude.mask" value=""/>
+
+	<presetdef name="mad_jar">
+		<jar compress="${hub.handler.compress.jar}">
+			<manifest>
+				<attribute name="Built-By" value="Initiate Systems, Inc., an IBM Company"/>
+				<attribute name="Created-By" value="Initiate Systems, Inc., an IBM Company"/>
+				<attribute name="Initiate-Version" value="${workbench.version}"/>
+			</manifest>
+		</jar>
+	</presetdef>
+
+	<target name="deploy_instance_handlers" description="Package Handlers for a Hub instance">
+		<deploy_handlers_java handlerdir="${hub.handler.dir}"/>
+	</target>
+	
+	<macrodef name="deploy_handlers_java">
+		<attribute name="handlerdir"/>
+		<sequential>
+			<property name="hub.handler.absolute.dir" location="@{handlerdir}" />
+			<var name="hub.handler.core.dir" value="${workbench.core.home}/lib"/>
+
+			<var name="hub.handler.deploy.dir" value="${basedir}"/>
+
+			<var name="hub.handlerext.bundle.working.dir" value="${basedir}/working"/>
+			<delete dir="${hub.handlerext.bundle.working.dir}"/>
+			<mkdir dir="${hub.handlerext.bundle.working.dir}"/>
+
+			<pathconvert pathsep="," dirsep="/" property="hub.handler.jars">
+				<path>
+					<fileset dir="${hub.handler.lib.dir}" includes="**/*.jar"/>
+				</path>
+				<map from="${hub.handler.lib.dir}${file.separator}" to=""/>
+			</pathconvert>
+
+			<!-- unzips all jar files from the @{handlerdir} location into the packaging area -->
+			<for list="${hub.handler.jars}" param="jarfile">
+				<sequential>
+					<echo message="unzipping extra jar: @{jarfile}"/>
+					<unzip 
+						src="${hub.handler.lib.dir}${file.separator}@{jarfile}"
+						dest="${hub.handlerext.bundle.working.dir}"
+					/>
+				</sequential>
+			</for>
+
+			<!-- copies all non-jar files from the @{handlerdir} location into the packaging area -->
+			<echo message="copying non-jar files from @{handlerdir}"/>
+			<copy todir="${hub.handlerext.bundle.working.dir}">
+				<fileset dir="@{handlerdir}">
+					<include name="${hub.handler.include.mask}"/>
+					<exclude name="${hub.handler.exclude.mask}"/>
+					<exclude name="**/*.jar"/>
+				</fileset>
+			</copy>
+
+			<!-- unzips all the (template) files from within handlerext directory, explicitly overwriting any existing manifest.mf file -->
+			<pathconvert pathsep="," dirsep="/" property="hub.deploy.handlerext.jars">
+				<path>
+					<fileset dir="${hub.handler.core.dir}">
+						<include name="**/com.initiate.server.handler.ext.jar"/>
+					</fileset>
+				</path>
+			</pathconvert>
+			<for list="${hub.deploy.handlerext.jars}" param="jarfile">
+				<sequential>
+					<echo message="unzipping handlerext (template) jar: @{jarfile}"/>
+					<unzip 
+						src="@{jarfile}"
+						dest="${hub.handlerext.bundle.working.dir}"
+						overwrite="true"/>
+				</sequential>
+			</for>
+
+			<!-- creating the bundle w/ a static manifest via madjar -->
+			<mad_jar destfile="${hub.handler.deploy.dir}${file.separator}com.initiate.server.handler.ext.jar"
+					manifest="${hub.handlerext.bundle.working.dir}/META-INF/MANIFEST.MF">
+				<fileset dir="${hub.handlerext.bundle.working.dir}"/>
+			</mad_jar>
+
+			<var name="hub.handler.absolute.dir" unset="true"/>
+			<delete dir="${hub.handlerext.bundle.working.dir}"/>
+			
+			<echo message="Java handlers package located in: ${hub.handler.deploy.dir}"/>
+		</sequential>
+	</macrodef>
+
+</project>

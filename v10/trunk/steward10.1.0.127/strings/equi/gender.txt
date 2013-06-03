@@ -1,0 +1,10 @@
+# To Value|From Value
+M|1
+F|2
+F|F
+H|H
+M|M
+O|O
+T|T
+M|MALE
+F|FEMALE
