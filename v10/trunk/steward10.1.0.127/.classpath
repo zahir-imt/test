@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<classpath>
-	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry exported="true" kind="var" path="WORKBENCH_CORE_DIR/lib/madapi.jar"/>
-	<classpathentry exported="true" kind="var" path="WORKBENCH_CORE_DIR/lib/madhandlers.jar"/>
-	<classpathentry exported="true" kind="var" path="WORKBENCH_LIBRARIES_DIR/lib/madapi2.jar"/>
-	<classpathentry kind="output" path="bin"/>
-</classpath>
